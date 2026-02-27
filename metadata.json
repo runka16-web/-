@@ -1,0 +1,5 @@
+{
+  "name": "车辆配载计算",
+  "description": "An intelligent vehicle loading and stowage optimization tool for logistics managers and shippers. Automatically matches goods to vehicles using advanced bin-packing algorithms.",
+  "requestFramePermissions": []
+}

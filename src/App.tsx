@@ -12,18 +12,15 @@ import {
   AlertCircle,
   CheckCircle2,
   Info,
-  FileUp,
-  Loader2,
   FileSpreadsheet,
-  FileText,
   Menu,
-  X
+  X,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as XLSX from 'xlsx';
 import { Good, Vehicle, OptimizationResult } from './types';
 import { optimizeLoading } from './optimizer';
-import { parseDocumentWithAI } from './services/aiParser';
 
 // Default Data
 const DEFAULT_GOODS: Good[] = [
@@ -44,7 +41,6 @@ export default function App() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(DEFAULT_VEHICLES);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'goods' | 'vehicles' | 'results'>('dashboard');
   const [result, setResult] = useState<OptimizationResult | null>(null);
-  const [isImporting, setIsImporting] = useState(false);
   const [selectedGoods, setSelectedGoods] = useState<Set<string>>(new Set());
   const [selectedVehicles, setSelectedVehicles] = useState<Set<string>>(new Set());
 
@@ -119,20 +115,15 @@ export default function App() {
     reader.readAsBinaryString(file);
   };
 
-  const handleAIImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsImporting(true);
-    try {
-      const importedGoods = await parseDocumentWithAI(file);
-      setGoods([...goods, ...importedGoods]);
-    } catch (error) {
-      console.error("Import failed:", error);
-      alert("导入失败，请检查文件格式或重试。");
-    } finally {
-      setIsImporting(false);
-    }
+  const downloadTemplate = () => {
+    const templateData = [
+      { '名称': '示例物资1', '重量': 10, '体积': 0.5, '数量': 100 },
+      { '名称': '示例物资2', '重量': 25, '体积': 1.2, '数量': 50 },
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "物资清单模板");
+    XLSX.writeFile(wb, "物资清单导入模板.xlsx");
   };
 
   // Handlers for Vehicles
@@ -402,11 +393,13 @@ export default function App() {
                     导入表格
                     <input type="file" accept=".xlsx, .xls, .csv" className="hidden" onChange={handleExcelImport} />
                   </label>
-                  <label className="bg-white border border-[#E5E5E5] hover:bg-gray-50 px-3 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors cursor-pointer text-sm">
-                    {isImporting ? <Loader2 className="w-4 h-4 animate-spin text-blue-600" /> : <FileText className="w-4 h-4 text-blue-600" />}
-                    AI 识别
-                    <input type="file" accept=".pdf, image/*" className="hidden" onChange={handleAIImport} disabled={isImporting} />
-                  </label>
+                  <button 
+                    onClick={downloadTemplate}
+                    className="bg-white border border-[#E5E5E5] hover:bg-gray-50 px-3 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors text-sm"
+                  >
+                    <Download className="w-4 h-4 text-blue-600" />
+                    下载模板
+                  </button>
                   <button 
                     onClick={addGood}
                     className="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors text-sm flex-1 md:flex-none justify-center"
